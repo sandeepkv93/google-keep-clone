@@ -3,7 +3,7 @@ package middleware
 import (
     "strings"
     "github.com/gofiber/fiber/v2"
-    "google-keep-clone/backend/internal/services"
+    "google-keep-clone/internal/services"
 )
 
 func AuthMiddleware(authService *services.AuthService) fiber.Handler {

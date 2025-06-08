@@ -1,0 +1,196 @@
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### First, login to get a token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+###
+@token = {{login.response.body.token}}
+
+### Get all notes
+GET {{baseUrl}}/notes
+Authorization: Bearer {{token}}
+
+### Get notes with archived
+GET {{baseUrl}}/notes?archived=true
+Authorization: Bearer {{token}}
+
+### Get notes with deleted
+GET {{baseUrl}}/notes?deleted=true
+Authorization: Bearer {{token}}
+
+### Create a new note
+# @name createNote
+POST {{baseUrl}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "My First Note",
+  "content": "This is the content of my first note.",
+  "color": "#ffeb3b"
+}
+
+###
+@noteId = {{createNote.response.body.id}}
+
+### Get note by ID
+GET {{baseUrl}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+
+### Update a note
+PUT {{baseUrl}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Updated Note Title",
+  "content": "Updated content",
+  "is_pinned": true
+}
+
+### Pin/Unpin a note
+PATCH {{baseUrl}}/notes/{{noteId}}/pin
+Authorization: Bearer {{token}}
+
+### Archive/Unarchive a note
+PATCH {{baseUrl}}/notes/{{noteId}}/archive
+Authorization: Bearer {{token}}
+
+### Update note color
+PATCH {{baseUrl}}/notes/{{noteId}}/color
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "color": "#ff5722"
+}
+
+### Create another note for testing
+POST {{baseUrl}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Shopping List",
+  "content": "- Milk\n- Bread\n- Eggs\n- Apples",
+  "color": "#4caf50"
+}
+
+### Create a third note
+POST {{baseUrl}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Meeting Notes",
+  "content": "Discussed project timeline and deliverables.",
+  "color": "#2196f3"
+}
+
+### Search notes
+GET {{baseUrl}}/notes/search?q=note
+Authorization: Bearer {{token}}
+
+### Search with limit and pagination
+GET {{baseUrl}}/notes/search?q=note&limit=10&page=0
+Authorization: Bearer {{token}}
+
+### Advanced search notes (all filters)
+POST {{baseUrl}}/notes/search/advanced
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "query": "note",
+  "label_ids": [],
+  "color": "#ffeb3b",
+  "include_archived": false
+}
+
+### Search notes by color only
+POST {{baseUrl}}/notes/search/advanced
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "color": "#4caf50"
+}
+
+### Search notes by text only
+POST {{baseUrl}}/notes/search/advanced
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "query": "shopping"
+}
+
+### Search including archived notes
+POST {{baseUrl}}/notes/search/advanced
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "include_archived": true
+}
+
+### Get pinned notes
+GET {{baseUrl}}/notes/pinned
+Authorization: Bearer {{token}}
+
+### Get archived notes
+GET {{baseUrl}}/notes/archived
+Authorization: Bearer {{token}}
+
+### Soft delete a note
+DELETE {{baseUrl}}/notes/{{noteId}}
+Authorization: Bearer {{token}}
+
+### Permanent delete a note (if you want to test)
+# DELETE {{baseUrl}}/notes/{{noteId}}?permanent=true
+# Authorization: Bearer {{token}}
+
+### Test error cases
+
+### Try to access note without authentication
+GET {{baseUrl}}/notes
+
+### Try to create note with invalid data
+POST {{baseUrl}}/notes
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "",
+  "content": "",
+  "color": "invalid-color"
+}
+
+### Try to update non-existent note
+PUT {{baseUrl}}/notes/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "This will fail"
+}
+
+### Try to get note with invalid ID
+GET {{baseUrl}}/notes/invalid-uuid
+Authorization: Bearer {{token}}
+
+### Test with invalid token
+GET {{baseUrl}}/notes
+Authorization: Bearer invalid_token_here
+
+### Test search with invalid parameters
+GET {{baseUrl}}/notes/search?q=&limit=1000&page=-1
+Authorization: Bearer {{token}}

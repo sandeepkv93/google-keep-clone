@@ -3,7 +3,7 @@ package repositories
 import (
     "github.com/google/uuid"
     "gorm.io/gorm"
-    "google-keep-clone/backend/internal/models"
+    "google-keep-clone/internal/models"
 )
 
 type NoteRepository struct {
@@ -74,6 +74,50 @@ func (r *NoteRepository) Search(userID uuid.UUID, query string) ([]models.Note, 
         Preload("Labels").
         Order("updated_at DESC").
         Find(&notes).Error
+    return notes, err
+}
+
+func (r *NoteRepository) SearchWithLabels(userID uuid.UUID, query string, labelIDs []uuid.UUID, includeArchived bool) ([]models.Note, error) {
+    var notes []models.Note
+    
+    baseQuery := r.db.Where("user_id = ? AND is_deleted = ?", userID, false)
+    
+    if !includeArchived {
+        baseQuery = baseQuery.Where("is_archived = ?", false)
+    }
+    
+    // Add text search if query is provided
+    if query != "" {
+        baseQuery = baseQuery.Where("(title ILIKE ? OR content ILIKE ?)", "%"+query+"%", "%"+query+"%")
+    }
+    
+    // Add label filtering if label IDs are provided
+    if len(labelIDs) > 0 {
+        baseQuery = baseQuery.Joins("INNER JOIN note_labels ON notes.id = note_labels.note_id").
+            Where("note_labels.label_id IN ?", labelIDs).
+            Group("notes.id")
+    }
+    
+    err := baseQuery.Preload("Labels").
+        Order("is_pinned DESC, updated_at DESC").
+        Find(&notes).Error
+    
+    return notes, err
+}
+
+func (r *NoteRepository) SearchByColor(userID uuid.UUID, color string, includeArchived bool) ([]models.Note, error) {
+    var notes []models.Note
+    
+    query := r.db.Where("user_id = ? AND is_deleted = ? AND color = ?", userID, false, color)
+    
+    if !includeArchived {
+        query = query.Where("is_archived = ?", false)
+    }
+    
+    err := query.Preload("Labels").
+        Order("is_pinned DESC, updated_at DESC").
+        Find(&notes).Error
+    
     return notes, err
 }
 

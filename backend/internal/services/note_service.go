@@ -4,20 +4,23 @@ import (
     "errors"
     "time"
     "github.com/google/uuid"
-    "google-keep-clone/backend/internal/models"
-    "google-keep-clone/backend/internal/repositories"
-    "google-keep-clone/backend/internal/validators"
+    "google-keep-clone/internal/models"
+    "google-keep-clone/internal/repositories"
+    "google-keep-clone/internal/validators"
+    "google-keep-clone/internal/websocket"
 )
 
 type NoteService struct {
     noteRepo *repositories.NoteRepository
     userRepo *repositories.UserRepository
+    hub      *websocket.Hub
 }
 
-func NewNoteService(noteRepo *repositories.NoteRepository, userRepo *repositories.UserRepository) *NoteService {
+func NewNoteService(noteRepo *repositories.NoteRepository, userRepo *repositories.UserRepository, hub *websocket.Hub) *NoteService {
     return &NoteService{
         noteRepo: noteRepo,
         userRepo: userRepo,
+        hub:      hub,
     }
 }
 
@@ -49,6 +52,11 @@ func (s *NoteService) CreateNote(userID uuid.UUID, req *validators.CreateNoteReq
 
     if err := s.noteRepo.Create(note); err != nil {
         return nil, errors.New("failed to create note")
+    }
+
+    // Broadcast note creation to WebSocket clients
+    if s.hub != nil {
+        s.hub.BroadcastToUser(userID, "note_created", note)
     }
 
     return note, nil
@@ -104,6 +112,11 @@ func (s *NoteService) UpdateNote(id, userID uuid.UUID, req *validators.UpdateNot
         return nil, errors.New("failed to update note")
     }
 
+    // Broadcast note update to WebSocket clients
+    if s.hub != nil {
+        s.hub.BroadcastToUser(userID, "note_updated", note)
+    }
+
     return note, nil
 }
 
@@ -118,7 +131,14 @@ func (s *NoteService) DeleteNote(id, userID uuid.UUID, soft bool) error {
         return s.noteRepo.SoftDelete(id, userID)
     }
 
-    return s.noteRepo.Delete(id, userID)
+    err = s.noteRepo.Delete(id, userID)
+    
+    // Broadcast note deletion to WebSocket clients
+    if err == nil && s.hub != nil {
+        s.hub.BroadcastToUser(userID, "note_deleted", map[string]string{"id": id.String()})
+    }
+    
+    return err
 }
 
 func (s *NoteService) TogglePin(id, userID uuid.UUID) (*models.Note, error) {
@@ -172,6 +192,21 @@ func (s *NoteService) SearchNotes(userID uuid.UUID, query string) ([]models.Note
     }
 
     return s.noteRepo.Search(userID, query)
+}
+
+func (s *NoteService) SearchNotesAdvanced(userID uuid.UUID, query string, labelIDs []uuid.UUID, color string, includeArchived bool) ([]models.Note, error) {
+    // If searching by color specifically
+    if color != "" && query == "" && len(labelIDs) == 0 {
+        return s.noteRepo.SearchByColor(userID, color, includeArchived)
+    }
+    
+    // If using advanced search with labels or other filters
+    if query != "" || len(labelIDs) > 0 {
+        return s.noteRepo.SearchWithLabels(userID, query, labelIDs, includeArchived)
+    }
+    
+    // Default to getting all notes
+    return s.noteRepo.GetByUserID(userID, includeArchived, false)
 }
 
 func (s *NoteService) GetPinnedNotes(userID uuid.UUID) ([]models.Note, error) {

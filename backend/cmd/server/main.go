@@ -2,21 +2,23 @@ package main
 
 import (
     "log"
-    "os"
 
+    "github.com/gofiber/contrib/websocket"
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/fiber/v2/middleware/cors"
     "github.com/gofiber/fiber/v2/middleware/logger"
+    "github.com/google/uuid"
     "github.com/joho/godotenv"
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
 
-    "google-keep-clone/backend/internal/config"
-    "google-keep-clone/backend/internal/handlers"
-    "google-keep-clone/backend/internal/middleware"
-    "google-keep-clone/backend/internal/models"
-    "google-keep-clone/backend/internal/repositories"
-    "google-keep-clone/backend/internal/services"
+    "google-keep-clone/internal/config"
+    "google-keep-clone/internal/handlers"
+    "google-keep-clone/internal/middleware"
+    "google-keep-clone/internal/models"
+    "google-keep-clone/internal/repositories"
+    "google-keep-clone/internal/services"
+    wsocket "google-keep-clone/internal/websocket"
 )
 
 // @title Google Keep Clone API
@@ -52,17 +54,24 @@ func main() {
         log.Fatal("Failed to migrate database:", err)
     }
 
+    // Initialize WebSocket hub
+    hub := wsocket.NewHub()
+    go hub.Run()
+
     // Initialize repositories
     userRepo := repositories.NewUserRepository(db)
     noteRepo := repositories.NewNoteRepository(db)
+    labelRepo := repositories.NewLabelRepository(db)
 
     // Initialize services
     authService := services.NewAuthService(userRepo, cfg)
-    noteService := services.NewNoteService(noteRepo, userRepo)
+    noteService := services.NewNoteService(noteRepo, userRepo, hub)
+    labelService := services.NewLabelService(labelRepo, noteRepo, userRepo, hub)
 
     // Initialize handlers
     authHandler := handlers.NewAuthHandler(authService)
     noteHandler := handlers.NewNoteHandler(noteService)
+    labelHandler := handlers.NewLabelHandler(labelService)
 
     // Initialize Fiber app
     app := fiber.New(fiber.Config{
@@ -119,8 +128,26 @@ func main() {
     
     // Special views
     notes.Get("/search", noteHandler.SearchNotes)
+    notes.Post("/search/advanced", noteHandler.SearchNotesAdvanced)
     notes.Get("/pinned", noteHandler.GetPinnedNotes)
     notes.Get("/archived", noteHandler.GetArchivedNotes)
+    
+    // Note label operations
+    notes.Post("/:note_id/labels", labelHandler.AttachLabelToNote)
+    notes.Delete("/:note_id/labels/:label_id", labelHandler.DetachLabelFromNote)
+
+    // Labels routes (protected)
+    labels := app.Group("/labels", middleware.AuthMiddleware(authService))
+    
+    // CRUD operations for labels
+    labels.Get("/", labelHandler.GetLabels)
+    labels.Post("/", labelHandler.CreateLabel)
+    labels.Get("/:id", labelHandler.GetLabelByID)
+    labels.Put("/:id", labelHandler.UpdateLabel)
+    labels.Delete("/:id", labelHandler.DeleteLabel)
+    
+    // Label-specific views
+    labels.Get("/:id/notes", labelHandler.GetNotesByLabel)
 
     // API routes (for future extensions)
     api := app.Group("/api", middleware.AuthMiddleware(authService))
@@ -130,6 +157,40 @@ func main() {
             "user_id": c.Locals("userID"),
         })
     })
+
+    // WebSocket routes
+    app.Use("/ws", func(c *fiber.Ctx) error {
+        if websocket.IsWebSocketUpgrade(c) {
+            c.Locals("allowed", true)
+            return c.Next()
+        }
+        return fiber.ErrUpgradeRequired
+    })
+    
+    app.Get("/ws", websocket.New(func(c *websocket.Conn) {
+        // Get user ID from query parameter (token validation should be done here)
+        token := c.Query("token")
+        if token == "" {
+            c.Close()
+            return
+        }
+        
+        // Validate token and get user ID
+        claims, err := authService.ValidateToken(token)
+        if err != nil {
+            c.Close()
+            return
+        }
+        
+        userID, err := uuid.Parse(claims.UserID)
+        if err != nil {
+            c.Close()
+            return
+        }
+        
+        // Handle WebSocket connection
+        hub.HandleWebSocket(c, userID)
+    }))
 
     // Start server
     port := cfg.Port

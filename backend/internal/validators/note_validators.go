@@ -32,6 +32,13 @@ type SearchRequest struct {
     Page  int    `json:"page"`
 }
 
+type AdvancedSearchRequest struct {
+    Query           string   `json:"query,omitempty"`
+    LabelIDs        []string `json:"label_ids,omitempty"`
+    Color           string   `json:"color,omitempty"`
+    IncludeArchived bool     `json:"include_archived,omitempty"`
+}
+
 func ValidateCreateNoteRequest(req *CreateNoteRequest) error {
     // At least title or content must be provided
     if strings.TrimSpace(req.Title) == "" && strings.TrimSpace(req.Content) == "" {
@@ -102,6 +109,27 @@ func ValidateSearchRequest(req *SearchRequest) error {
     // Validate page
     if req.Page < 0 {
         return errors.New("page must be non-negative")
+    }
+
+    return nil
+}
+
+func ValidateAdvancedSearchRequest(req *AdvancedSearchRequest) error {
+    // Validate query length
+    if len(req.Query) > 100 {
+        return errors.New("search query must be less than 100 characters")
+    }
+
+    // Validate color format if provided
+    if req.Color != "" {
+        if err := validateColor(req.Color); err != nil {
+            return err
+        }
+    }
+
+    // Validate label IDs if provided
+    if len(req.LabelIDs) > 10 {
+        return errors.New("cannot filter by more than 10 labels at once")
     }
 
     return nil

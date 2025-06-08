@@ -5,10 +5,10 @@ import (
     "time"
     "github.com/golang-jwt/jwt/v5"
     "golang.org/x/crypto/bcrypt"
-    "google-keep-clone/backend/internal/config"
-    "google-keep-clone/backend/internal/models"
-    "google-keep-clone/backend/internal/repositories"
-    "google-keep-clone/backend/internal/validators"
+    "google-keep-clone/internal/config"
+    "google-keep-clone/internal/models"
+    "google-keep-clone/internal/repositories"
+    "google-keep-clone/internal/validators"
 )
 
 type AuthService struct {

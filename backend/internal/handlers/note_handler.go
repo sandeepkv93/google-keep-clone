@@ -4,8 +4,8 @@ import (
     "strconv"
     "github.com/gofiber/fiber/v2"
     "github.com/google/uuid"
-    "google-keep-clone/backend/internal/services"
-    "google-keep-clone/backend/internal/validators"
+    "google-keep-clone/internal/services"
+    "google-keep-clone/internal/validators"
 )
 
 type NoteHandler struct {
@@ -259,6 +259,45 @@ func (h *NoteHandler) SearchNotes(c *fiber.Ctx) error {
     }
 
     notes, err := h.noteService.SearchNotes(userID, query)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    return c.JSON(notes)
+}
+
+// @Summary Advanced search notes
+// @Description Search notes with advanced filters including labels and color
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body validators.AdvancedSearchRequest true "Advanced search parameters"
+// @Success 200 {array} models.Note
+// @Router /notes/search/advanced [post]
+func (h *NoteHandler) SearchNotesAdvanced(c *fiber.Ctx) error {
+    userID, _ := uuid.Parse(c.Locals("userID").(string))
+
+    var req validators.AdvancedSearchRequest
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+    }
+
+    if err := validators.ValidateAdvancedSearchRequest(&req); err != nil {
+        return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    // Convert string label IDs to UUID slice
+    var labelIDs []uuid.UUID
+    for _, labelIDStr := range req.LabelIDs {
+        if labelID, err := uuid.Parse(labelIDStr); err == nil {
+            labelIDs = append(labelIDs, labelID)
+        } else {
+            return c.Status(400).JSON(fiber.Map{"error": "Invalid label ID: " + labelIDStr})
+        }
+    }
+
+    notes, err := h.noteService.SearchNotesAdvanced(userID, req.Query, labelIDs, req.Color, req.IncludeArchived)
     if err != nil {
         return c.Status(500).JSON(fiber.Map{"error": err.Error()})
     }

@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  "build:backend":
+    desc: Build backend binary
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - echo "🔨 Building backend..."
+      - mkdir -p bin
+      - echo "✅ Backend build complete: {{.BACKEND_DIR}}/bin/server"

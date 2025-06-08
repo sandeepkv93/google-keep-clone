@@ -3,7 +3,7 @@ package repositories
 import (
     "github.com/google/uuid"
     "gorm.io/gorm"
-    "google-keep-clone/backend/internal/models"
+    "google-keep-clone/internal/models"
 )
 
 type UserRepository struct {

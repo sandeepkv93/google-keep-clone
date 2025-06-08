@@ -1,0 +1,81 @@
+@baseUrl = http://localhost:8080
+@token = YOUR_JWT_TOKEN_HERE
+
+### Get all labels
+GET {{baseUrl}}/labels
+Authorization: Bearer {{token}}
+
+### Create a new label
+POST {{baseUrl}}/labels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Important",
+  "color": "#ff5722"
+}
+
+### Get label by ID
+GET {{baseUrl}}/labels/LABEL_ID_HERE
+Authorization: Bearer {{token}}
+
+### Update a label
+PUT {{baseUrl}}/labels/LABEL_ID_HERE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Very Important",
+  "color": "#e91e63"
+}
+
+### Delete a label
+DELETE {{baseUrl}}/labels/LABEL_ID_HERE
+Authorization: Bearer {{token}}
+
+### Get notes by label
+GET {{baseUrl}}/labels/LABEL_ID_HERE/notes
+Authorization: Bearer {{token}}
+
+### Attach label to note
+POST {{baseUrl}}/notes/NOTE_ID_HERE/labels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "label_id": "LABEL_ID_HERE"
+}
+
+### Detach label from note
+DELETE {{baseUrl}}/notes/NOTE_ID_HERE/labels/LABEL_ID_HERE
+Authorization: Bearer {{token}}
+
+### Create multiple labels for testing
+POST {{baseUrl}}/labels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Work",
+  "color": "#2196f3"
+}
+
+###
+POST {{baseUrl}}/labels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Personal",
+  "color": "#4caf50"
+}
+
+###
+POST {{baseUrl}}/labels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Ideas",
+  "color": "#ff9800"
+}

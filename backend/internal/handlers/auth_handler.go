@@ -3,8 +3,8 @@ package handlers
 import (
     "github.com/gofiber/fiber/v2"
     "github.com/google/uuid"
-    "google-keep-clone/backend/internal/services"
-    "google-keep-clone/backend/internal/validators"
+    "google-keep-clone/internal/services"
+    "google-keep-clone/internal/validators"
 )
 
 type AuthHandler struct {
