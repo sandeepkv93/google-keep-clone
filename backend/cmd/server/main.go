@@ -54,12 +54,15 @@ func main() {
 
     // Initialize repositories
     userRepo := repositories.NewUserRepository(db)
+    noteRepo := repositories.NewNoteRepository(db)
 
     // Initialize services
     authService := services.NewAuthService(userRepo, cfg)
+    noteService := services.NewNoteService(noteRepo, userRepo)
 
     // Initialize handlers
     authHandler := handlers.NewAuthHandler(authService)
+    noteHandler := handlers.NewNoteHandler(noteService)
 
     // Initialize Fiber app
     app := fiber.New(fiber.Config{
@@ -99,13 +102,31 @@ func main() {
     // Protected auth routes
     authRoutes.Get("/me", middleware.AuthMiddleware(authService), authHandler.GetCurrentUser)
 
-    // API routes (will be protected)
-    api := app.Group("/api", middleware.AuthMiddleware(authService))
+    // Notes routes (protected)
+    notes := app.Group("/notes", middleware.AuthMiddleware(authService))
     
-    // Placeholder for future API routes
+    // CRUD operations
+    notes.Get("/", noteHandler.GetNotes)
+    notes.Post("/", noteHandler.CreateNote)
+    notes.Get("/:id", noteHandler.GetNoteByID)
+    notes.Put("/:id", noteHandler.UpdateNote)
+    notes.Delete("/:id", noteHandler.DeleteNote)
+    
+    // Note actions
+    notes.Patch("/:id/pin", noteHandler.TogglePin)
+    notes.Patch("/:id/archive", noteHandler.ToggleArchive)
+    notes.Patch("/:id/color", noteHandler.UpdateColor)
+    
+    // Special views
+    notes.Get("/search", noteHandler.SearchNotes)
+    notes.Get("/pinned", noteHandler.GetPinnedNotes)
+    notes.Get("/archived", noteHandler.GetArchivedNotes)
+
+    // API routes (for future extensions)
+    api := app.Group("/api", middleware.AuthMiddleware(authService))
     api.Get("/", func(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
-            "message": "API routes will be implemented here",
+            "message": "API routes for future features",
             "user_id": c.Locals("userID"),
         })
     })
