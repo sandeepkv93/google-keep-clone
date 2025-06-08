@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pin, Archive, Trash2, MoreVertical, Palette } from 'lucide-react'
-import { Note } from '@/types/note'
+import type { Note } from '@/types/note'
 import { cn } from '@/lib/utils'
 
 interface NoteCardProps {

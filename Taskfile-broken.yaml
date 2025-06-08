@@ -4,7 +4,6 @@ vars:
   BACKEND_DIR: ./backend
   FRONTEND_DIR: ./frontend
   API_TESTS_DIR: ./api-tests
-  DOCKER_DIR: ./docker
   
   # Database configuration
   DB_NAME: google_keep_clone
@@ -80,13 +79,13 @@ tasks:
   setup:
     desc: Install all dependencies and setup the project
     cmds:
-      - task: setup:backend
-      - task: setup:frontend
-      - task: setup:env
+      - task: setup-backend
+      - task: setup-frontend
+      - task: setup-env
       - echo "✅ Project setup complete!"
       - echo "💡 Run 'task dev' to start development"
 
-  "setup:backend":
+  setup-backend:
     desc: Setup backend dependencies
     dir: "{{.BACKEND_DIR}}"
     cmds:
@@ -95,7 +94,7 @@ tasks:
       - go mod download
       - echo "✅ Backend dependencies installed"
 
-  "setup:frontend":
+  setup-frontend:
     desc: Setup frontend dependencies
     dir: "{{.FRONTEND_DIR}}"
     cmds:
@@ -103,13 +102,32 @@ tasks:
       - npm install
       - echo "✅ Frontend dependencies installed"
 
-  "setup:env":
+  setup-env:
     desc: Setup environment configuration
     cmds:
       - |
         if [ ! -f .env ]; then
           echo "📝 Creating .env file from template..."
-          cp .env.example .env
+          echo "# Database" > .env
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/google_keep_clone?sslmode=disable" >> .env
+          echo "" >> .env
+          echo "# Redis" >> .env
+          echo "REDIS_URL=redis://localhost:6379" >> .env
+          echo "" >> .env
+          echo "# JWT" >> .env
+          echo "JWT_SECRET=dev-secret-key-change-in-production" >> .env
+          echo "" >> .env
+          echo "# Google OAuth (optional)" >> .env
+          echo "GOOGLE_CLIENT_ID=" >> .env
+          echo "GOOGLE_CLIENT_SECRET=" >> .env
+          echo "" >> .env
+          echo "# API URLs" >> .env
+          echo "VITE_API_URL=http://localhost:8080" >> .env
+          echo "VITE_WS_URL=ws://localhost:8080" >> .env
+          echo "" >> .env
+          echo "# Environment" >> .env
+          echo "ENVIRONMENT=development" >> .env
+          echo "PORT=8080" >> .env
           echo "✅ Environment file created"
         else
           echo "✅ Environment file already exists"
@@ -118,76 +136,10 @@ tasks:
       - test -f .env
 
   # =============================================================================
-  # DEVELOPMENT
-  # =============================================================================
-  
-  dev:
-    desc: Start full development environment (database + backend + frontend)
-    deps: [db:start]
-    cmds:
-      - echo "🚀 Starting development environment..."
-      - task: "dev:parallel"
-
-  "dev:parallel":
-    desc: Run backend and frontend in parallel
-    deps: [db:wait]
-    cmds:
-      - |
-        # Start backend and frontend in parallel
-        (task dev:backend > backend.log 2>&1 &)
-        (task dev:frontend > frontend.log 2>&1 &)
-        
-        echo "🔗 Development servers starting..."
-        echo "📊 Backend: http://localhost:{{.SERVER_PORT}}"
-        echo "🌐 Frontend: http://localhost:{{.FRONTEND_PORT}}"
-        echo "🏥 Health check: http://localhost:{{.SERVER_PORT}}/health"
-        echo ""
-        echo "📋 Logs:"
-        echo "  Backend:  tail -f backend.log"
-        echo "  Frontend: tail -f frontend.log"
-        echo ""
-        echo "⏹️  Stop with: task dev:stop"
-        
-        # Wait for user interrupt
-        trap 'task dev:stop' INT
-        wait
-
-  "dev:backend":
-    desc: Start backend development server
-    dir: "{{.BACKEND_DIR}}"
-    deps: [db:wait]
-    cmds:
-      - echo "🔥 Starting backend server on port {{.SERVER_PORT}}..."
-      - |
-        if command -v air > /dev/null; then
-          air
-        else
-          echo "⚠️  Air not installed, using go run (no hot reload)"
-          go run "cmd/server/main.go"
-        fi
-
-  "dev:frontend":
-    desc: Start frontend development server
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - echo "⚛️  Starting frontend server on port {{.FRONTEND_PORT}}..."
-      - npm run dev
-
-  dev:stop:
-    desc: Stop all development servers
-    cmds:
-      - echo "🛑 Stopping development servers..."
-      - pkill -f "air" || true
-      - pkill -f "go run" || true
-      - pkill -f "vite" || true
-      - pkill -f "npm run dev" || true
-      - echo "✅ Development servers stopped"
-
-  # =============================================================================
   # DATABASE MANAGEMENT
   # =============================================================================
   
-  db:start:
+  db-start:
     desc: Start PostgreSQL and Redis with Docker
     cmds:
       - echo "🐳 Starting database services..."
@@ -217,7 +169,7 @@ tasks:
           echo "✅ Redis already running"
         fi
 
-  db:wait:
+  db-wait:
     desc: Wait for database to be ready
     cmds:
       - echo "⏳ Waiting for PostgreSQL to be ready..."
@@ -231,14 +183,14 @@ tasks:
           sleep 2
         done
 
-  db:stop:
+  db-stop:
     desc: Stop database services
     cmds:
       - echo "🛑 Stopping database services..."
       - docker stop postgres redis 2>/dev/null || true
       - echo "✅ Database services stopped"
 
-  db:clean:
+  db-clean:
     desc: Remove database containers and volumes
     cmds:
       - echo "🧹 Cleaning database containers..."
@@ -247,20 +199,71 @@ tasks:
       - docker volume prune -f
       - echo "✅ Database containers cleaned"
 
-  db:reset:
+  db-reset:
     desc: Reset database (stop, clean, start)
     cmds:
-      - task: db:stop
-      - task: db:clean
-      - task: db:start
-      - task: db:wait
+      - task: db-stop
+      - task: db-clean
+      - task: db-start
+      - task: db-wait
       - echo "♻️  Database reset complete"
 
-  db:logs:
+  db-logs:
     desc: Show database logs
     cmds:
       - echo "📋 PostgreSQL logs:"
       - docker logs postgres --tail=50 -f
+
+  # =============================================================================
+  # DEVELOPMENT
+  # =============================================================================
+  
+  dev:
+    desc: Start full development environment (database + backend + frontend)
+    deps: [db-start]
+    cmds:
+      - echo "🚀 Starting development environment..."
+      - task: db-wait
+      - echo "💡 Starting backend and frontend servers..."
+      - echo "📊 Backend will be at: http://localhost:{{.SERVER_PORT}}"
+      - echo "🌐 Frontend will be at: http://localhost:{{.FRONTEND_PORT}}"
+      - echo "🏥 Health check: http://localhost:{{.SERVER_PORT}}/health"
+      - echo ""
+      - echo "⏹️  Stop with Ctrl+C or run: task dev-stop"
+      - echo ""
+      - echo "Starting servers in parallel..."
+
+  dev-backend:
+    desc: Start backend development server only
+    dir: "{{.BACKEND_DIR}}"
+    deps: [db-wait]
+    cmds:
+      - echo "🔥 Starting backend server on port {{.SERVER_PORT}}..."
+      - |
+        if command -v air > /dev/null; then
+          air
+        else
+          echo "⚠️  Air not installed, using go run (no hot reload)"
+          echo "💡 Install air with: go install github.com/cosmtrek/air@latest"
+          go run cmd/server/main.go
+        fi
+
+  dev-frontend:
+    desc: Start frontend development server only
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - echo "⚛️  Starting frontend server on port {{.FRONTEND_PORT}}..."
+      - npm run dev
+
+  dev-stop:
+    desc: Stop all development servers
+    cmds:
+      - echo "🛑 Stopping development servers..."
+      - pkill -f "air" || true
+      - pkill -f "go run" || true
+      - pkill -f "vite" || true
+      - pkill -f "npm run dev" || true
+      - echo "✅ Development servers stopped"
 
   # =============================================================================
   # BUILDING
@@ -269,11 +272,11 @@ tasks:
   build:
     desc: Build production artifacts for both frontend and backend
     cmds:
-      - task: "build:frontend"
-      - task: "build:backend"
+      - task: build-frontend
+      - task: build-backend
       - echo "🎉 Build complete!"
 
-  "build:frontend":
+  build-frontend:
     desc: Build frontend for production
     dir: "{{.FRONTEND_DIR}}"
     cmds:
@@ -281,13 +284,13 @@ tasks:
       - npm run build
       - echo "✅ Frontend build complete"
 
-  "build:backend":
+  build-backend:
     desc: Build backend binary
     dir: "{{.BACKEND_DIR}}"
     cmds:
       - echo "🔨 Building backend..."
       - mkdir -p bin
-      - go build -o bin/server "cmd/server/main.go"
+      - go build -o bin/server cmd/server/main.go
       - echo "✅ Backend build complete: {{.BACKEND_DIR}}/bin/server"
 
   # =============================================================================
@@ -297,11 +300,10 @@ tasks:
   test:
     desc: Run all tests
     cmds:
-      - task: "test:backend"
-      - task: "test:frontend"
+      - task: test-backend
       - echo "🧪 All tests complete!"
 
-  "test:backend":
+  test-backend:
     desc: Run backend tests
     dir: "{{.BACKEND_DIR}}"
     cmds:
@@ -309,27 +311,7 @@ tasks:
       - go test ./... -v
       - echo "✅ Backend tests passed"
 
-  "test:frontend":
-    desc: Run frontend tests
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - echo "🧪 Running frontend tests..."
-      - npm run test -- --run
-      - echo "✅ Frontend tests passed"
-
-  "test:watch":
-    desc: Run tests in watch mode
-    cmds:
-      - echo "👀 Starting test watchers..."
-      - echo "Backend tests will run on file changes..."
-      - |
-        # Run backend tests in watch mode
-        cd {{.BACKEND_DIR}} && go test ./... -watch &
-        # Run frontend tests in watch mode
-        cd {{.FRONTEND_DIR}} && npm run test &
-        wait
-
-  "test:api":
+  test-api:
     desc: Test API endpoints (requires running server)
     cmds:
       - echo "🌐 Testing API endpoints..."
@@ -344,12 +326,11 @@ tasks:
   # =============================================================================
   
   lint:
-    desc: Run linting for both frontend and backend
+    desc: Run linting for backend
     cmds:
-      - task: "lint:backend"
-      - task: "lint:frontend"
+      - task: lint-backend
 
-  "lint:backend":
+  lint-backend:
     desc: Run Go linting
     dir: "{{.BACKEND_DIR}}"
     cmds:
@@ -359,73 +340,23 @@ tasks:
           golangci-lint run
         else
           echo "⚠️  golangci-lint not installed, running go vet instead"
+          echo "💡 Install with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
           go vet ./...
         fi
       - echo "✅ Backend linting complete"
 
-  "lint:frontend":
-    desc: Run frontend linting
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - echo "🔍 Running frontend linting..."
-      - npm run lint
-      - echo "✅ Frontend linting complete"
-
   format:
-    desc: Format code for both frontend and backend
+    desc: Format code for backend
     cmds:
-      - task: "format:backend"
-      - task: "format:frontend"
+      - task: format-backend
 
-  "format:backend":
+  format-backend:
     desc: Format Go code
     dir: "{{.BACKEND_DIR}}"
     cmds:
       - echo "🎨 Formatting Go code..."
       - go fmt ./...
       - echo "✅ Backend formatting complete"
-
-  "format:frontend":
-    desc: Format frontend code
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - echo "🎨 Formatting frontend code..."
-      - npm run format || echo "⚠️  Format script not available"
-      - echo "✅ Frontend formatting complete"
-
-  # =============================================================================
-  # DOCKER OPERATIONS
-  # =============================================================================
-  
-  "docker:build":
-    desc: Build Docker images for production
-    cmds:
-      - echo "🐳 Building Docker images..."
-      - docker build -f {{.DOCKER_DIR}}/Dockerfile.backend -t google-keep-clone-backend .
-      - docker build -f {{.DOCKER_DIR}}/Dockerfile.frontend -t google-keep-clone-frontend .
-      - echo "✅ Docker images built"
-
-  "docker:up":
-    desc: Start production environment with Docker Compose
-    dir: "{{.DOCKER_DIR}}"
-    cmds:
-      - echo "🐳 Starting production environment..."
-      - docker-compose up -d
-      - echo "✅ Production environment started"
-
-  "docker:down":
-    desc: Stop Docker Compose environment
-    dir: "{{.DOCKER_DIR}}"
-    cmds:
-      - echo "🛑 Stopping Docker Compose environment..."
-      - docker-compose down
-      - echo "✅ Docker environment stopped"
-
-  "docker:logs":
-    desc: Show Docker Compose logs
-    dir: "{{.DOCKER_DIR}}"
-    cmds:
-      - docker-compose logs -f
 
   # =============================================================================
   # UTILITIES AND MAINTENANCE
@@ -434,11 +365,11 @@ tasks:
   clean:
     desc: Clean all build artifacts and dependencies
     cmds:
-      - task: "clean:backend"
-      - task: "clean:frontend"
+      - task: clean-backend
+      - task: clean-frontend
       - echo "✅ Cleanup complete"
 
-  "clean:backend":
+  clean-backend:
     desc: Clean backend build artifacts
     dir: "{{.BACKEND_DIR}}"
     cmds:
@@ -447,7 +378,7 @@ tasks:
       - rm -rf bin/
       - echo "✅ Backend cleaned"
 
-  "clean:frontend":
+  clean-frontend:
     desc: Clean frontend build artifacts and dependencies
     dir: "{{.FRONTEND_DIR}}"
     cmds:
@@ -456,13 +387,13 @@ tasks:
       - rm -rf node_modules/
       - echo "✅ Frontend cleaned"
 
-  "deps:update":
+  deps-update:
     desc: Update all dependencies
     cmds:
-      - task: "deps:update:backend"
-      - task: "deps:update:frontend"
+      - task: deps-update-backend
+      - task: deps-update-frontend
 
-  "deps:update:backend":
+  deps-update-backend:
     desc: Update Go dependencies
     dir: "{{.BACKEND_DIR}}"
     cmds:
@@ -471,7 +402,7 @@ tasks:
       - go mod tidy
       - echo "✅ Go dependencies updated"
 
-  "deps:update:frontend":
+  deps-update-frontend:
     desc: Update Node.js dependencies
     dir: "{{.FRONTEND_DIR}}"
     cmds:
@@ -483,7 +414,7 @@ tasks:
   # DEVELOPMENT TOOLS
   # =============================================================================
   
-  "tools:install":
+  tools-install:
     desc: Install useful development tools
     cmds:
       - echo "🔧 Installing development tools..."
@@ -507,27 +438,18 @@ tasks:
         fi
       - echo "✅ Development tools installed"
 
-  "docs:generate":
+  docs-generate:
     desc: Generate API documentation
     dir: "{{.BACKEND_DIR}}"
     cmds:
       - echo "📚 Generating API documentation..."
       - |
         if command -v swag > /dev/null; then
-          swag init -g "cmd/server/main.go" -o docs/
+          swag init -g cmd/server/main.go -o docs/
           echo "✅ API docs generated in {{.BACKEND_DIR}}/docs/"
         else
-          echo "⚠️  swag not installed. Run 'task tools:install' first"
+          echo "⚠️  swag not installed. Run 'task tools-install' first"
         fi
-
-  logs:
-    desc: Show application logs
-    cmds:
-      - echo "📋 Application logs:"
-      - echo "Backend log:"
-      - tail -f backend.log 2>/dev/null || echo "No backend log file found"
-      - echo "Frontend log:"
-      - tail -f frontend.log 2>/dev/null || echo "No frontend log file found"
 
   # =============================================================================
   # QUICK COMMANDS
@@ -541,8 +463,8 @@ tasks:
   stop:
     desc: Stop all services
     cmds:
-      - task: "dev:stop"
-      - task: db:stop
+      - task: dev-stop
+      - task: db-stop
 
   restart:
     desc: Restart development environment

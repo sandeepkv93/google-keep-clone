@@ -1,4 +1,4 @@
-import { Note } from '@/types/note'
+import type { Note } from '@/types/note'
 import { NoteCard } from './NoteCard'
 
 interface NoteGridProps {

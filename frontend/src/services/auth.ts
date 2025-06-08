@@ -1,4 +1,4 @@
-import { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types/auth'
+import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types/auth'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 

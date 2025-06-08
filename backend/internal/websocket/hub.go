@@ -102,7 +102,7 @@ func (h *Hub) BroadcastToUser(userID uuid.UUID, messageType string, payload inte
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 
 	for {
@@ -126,13 +126,14 @@ func (c *Client) readPump() {
 }
 
 func (c *Client) writePump() {
-	defer c.conn.Close()
+	defer func() { _ = c.conn.Close() }()
 
+	//nolint:staticcheck // This is the correct pattern for WebSocket pumps
 	for {
 		select {
 		case message, ok := <-c.send:
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 

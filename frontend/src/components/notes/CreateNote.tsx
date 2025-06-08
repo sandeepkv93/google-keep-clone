@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Check, X } from 'lucide-react'
-import { CreateNoteRequest } from '@/types/note'
+import type { CreateNoteRequest } from '@/types/note'
 
 interface CreateNoteProps {
   onCreateNote: (noteData: CreateNoteRequest) => void

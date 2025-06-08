@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"google-keep-clone/internal/models"
+	"gorm.io/gorm"
 )
 
 type LabelRepository struct {

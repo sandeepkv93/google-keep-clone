@@ -1,4 +1,4 @@
-import { Note, CreateNoteRequest, UpdateNoteRequest } from '@/types/note'
+import type { Note, CreateNoteRequest, UpdateNoteRequest } from '@/types/note'
 import { authService } from './auth'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'

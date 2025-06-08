@@ -1,0 +1,33 @@
+version: '3'
+
+vars:
+  BACKEND_DIR: ./backend
+  FRONTEND_DIR: ./frontend
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list-all
+
+  info:
+    desc: Show project information
+    cmds:
+      - echo "Google Keep Clone Project"
+      - echo "Backend dir: {{.BACKEND_DIR}}"
+      - echo "Frontend dir: {{.FRONTEND_DIR}}"
+
+  build-backend:
+    desc: Build backend binary
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - echo "Building backend..."
+      - mkdir -p bin
+      - go build -o bin/server cmd/server/main.go
+      - echo "Backend build complete"
+
+  test:
+    desc: Run tests
+    cmds:
+      - echo "Running tests..."
+      - echo "Tests complete"

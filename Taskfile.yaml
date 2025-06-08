@@ -3,50 +3,306 @@ version: '3'
 vars:
   BACKEND_DIR: ./backend
   FRONTEND_DIR: ./frontend
+  API_TESTS_DIR: ./api-tests
+  DB_NAME: google_keep_clone
+  DB_USER: postgres
+  DB_PASS: postgres
+  DB_HOST: localhost
+  DB_PORT: 5432
+  SERVER_PORT: 8080
+  FRONTEND_PORT: 5173
+  POSTGRES_IMAGE: postgres:15-alpine
+  REDIS_IMAGE: redis:7-alpine
+
+env:
+  DATABASE_URL: "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode=disable"
+  REDIS_URL: "redis://localhost:6379"
+  JWT_SECRET: dev-secret-key-change-in-production
+  ENVIRONMENT: development
+  PORT: "{{.SERVER_PORT}}"
 
 tasks:
   default:
     desc: Show available tasks
     cmds:
       - task --list-all
+    silent: true
+
+  help:
+    desc: Show detailed help
+    cmds:
+      - echo "Google Keep Clone - Task Runner"
+      - echo "================================"
+      - echo ""
+      - echo "Quick Start:"
+      - echo "  task setup     - Install all dependencies"
+      - echo "  task dev       - Start development environment"
+      - echo "  task build     - Build production artifacts"
+      - echo "  task test      - Run all tests"
+    silent: true
+
+  info:
+    desc: Show project status
+    cmds:
+      - echo "Google Keep Clone Project Status"
+      - echo "==============================="
+      - echo ""
+      - echo "Backend (Go):"
+      - cd "{{.BACKEND_DIR}}" && go version 2>/dev/null || echo "  Go not installed"
+      - test -f "{{.BACKEND_DIR}}/go.mod" && echo "  Go module initialized" || echo "  Go module not found"
+      - echo ""
+      - echo "Frontend (Node.js):"
+      - cd "{{.FRONTEND_DIR}}" && node --version 2>/dev/null || echo "  Node.js not installed"
+      - test -f "{{.FRONTEND_DIR}}/package.json" && echo "  Package.json found" || echo "  Package.json not found"
+    silent: true
 
   setup:
     desc: Install all dependencies
     cmds:
       - task: setup-backend
       - task: setup-frontend
+      - task: setup-env
+      - echo "Project setup complete!"
 
   setup-backend:
     desc: Setup backend dependencies
     dir: "{{.BACKEND_DIR}}"
     cmds:
+      - echo "Installing Go dependencies..."
       - go mod tidy
+      - go mod download
+      - echo "Backend dependencies installed"
 
   setup-frontend:
     desc: Setup frontend dependencies
     dir: "{{.FRONTEND_DIR}}"
     cmds:
+      - echo "Installing Node.js dependencies..."
       - npm install
+      - echo "Frontend dependencies installed"
 
-  dev:
-    desc: Start development environment
+  setup-env:
+    desc: Setup environment configuration
     cmds:
-      - echo "Starting development servers..."
+      - |
+        if [ ! -f .env ]; then
+          echo "Creating .env file..."
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/google_keep_clone?sslmode=disable" > .env
+          echo "REDIS_URL=redis://localhost:6379" >> .env
+          echo "JWT_SECRET=dev-secret-key-change-in-production" >> .env
+          echo "VITE_API_URL=http://localhost:8080" >> .env
+          echo "VITE_WS_URL=ws://localhost:8080" >> .env
+          echo "ENVIRONMENT=development" >> .env
+          echo "PORT=8080" >> .env
+          echo "Environment file created"
+        else
+          echo "Environment file already exists"
+        fi
+
+  db-start:
+    desc: Start PostgreSQL and Redis with Docker
+    cmds:
+      - echo "Starting database services..."
+      - |
+        if ! docker ps --filter "name=postgres" --format "{{.Names}}" | grep -q postgres; then
+          echo "Starting PostgreSQL..."
+          docker run -d --name postgres -e POSTGRES_DB={{.DB_NAME}} -e POSTGRES_USER={{.DB_USER}} -e POSTGRES_PASSWORD={{.DB_PASS}} -p {{.DB_PORT}}:5432 {{.POSTGRES_IMAGE}}
+        else
+          echo "PostgreSQL already running"
+        fi
+      - |
+        if ! docker ps --filter "name=redis" --format "{{.Names}}" | grep -q redis; then
+          echo "Starting Redis..."
+          docker run -d --name redis -p 6379:6379 {{.REDIS_IMAGE}}
+        else
+          echo "Redis already running"
+        fi
+
+  db-wait:
+    desc: Wait for database to be ready
+    cmds:
+      - echo "Waiting for PostgreSQL..."
+      - |
+        for i in {1..30}; do
+          if docker exec postgres pg_isready -U {{.DB_USER}} > /dev/null 2>&1; then
+            echo "PostgreSQL is ready"
+            break
+          fi
+          echo "  Waiting... ($i/30)"
+          sleep 2
+        done
+
+  db-stop:
+    desc: Stop database services
+    cmds:
+      - echo "Stopping database services..."
+      - docker stop postgres redis 2>/dev/null || true
+      - echo "Database services stopped"
+
+  db-clean:
+    desc: Remove database containers
+    cmds:
+      - echo "Cleaning database containers..."
+      - docker stop postgres redis 2>/dev/null || true
+      - docker rm postgres redis 2>/dev/null || true
+      - echo "Database containers cleaned"
+
+  db-reset:
+    desc: Reset database
+    cmds:
+      - task: db-stop
+      - task: db-clean
+      - task: db-start
+      - task: db-wait
+
+  dev-backend:
+    desc: Start backend development server
+    dir: "{{.BACKEND_DIR}}"
+    deps: [db-start, db-wait]
+    cmds:
+      - echo "Starting backend server..."
+      - |
+        if command -v air > /dev/null; then
+          air
+        else
+          echo "Air not installed, using go run"
+          go run cmd/server/main.go
+        fi
+
+  dev-frontend:
+    desc: Start frontend development server
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - echo "Starting frontend server..."
+      - npm run dev
 
   build:
     desc: Build all
     cmds:
       - task: build-backend
       - task: build-frontend
+      - echo "Build complete!"
 
   build-backend:
-    desc: Build backend
+    desc: Build backend binary
     dir: "{{.BACKEND_DIR}}"
     cmds:
+      - echo "Building backend..."
+      - mkdir -p bin
       - go build -o bin/server cmd/server/main.go
+      - echo "Backend build complete"
 
   build-frontend:
-    desc: Build frontend
+    desc: Build frontend for production
     dir: "{{.FRONTEND_DIR}}"
     cmds:
+      - echo "Building frontend..."
       - npm run build
+      - echo "Frontend build complete"
+
+  test:
+    desc: Run all tests
+    cmds:
+      - task: test-backend
+      - echo "All tests complete!"
+
+  test-backend:
+    desc: Run backend tests
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - echo "Running backend tests..."
+      - go test ./... -v
+      - echo "Backend tests passed"
+
+  test-api:
+    desc: Test API endpoints
+    cmds:
+      - echo "Testing API endpoints..."
+      - curl -f "http://localhost:{{.SERVER_PORT}}/health" || echo "Server not running"
+
+  lint:
+    desc: Run linting
+    cmds:
+      - task: lint-backend
+
+  lint-backend:
+    desc: Run Go linting
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - echo "Running Go linting..."
+      - |
+        if command -v golangci-lint > /dev/null; then
+          golangci-lint run
+        else
+          echo "golangci-lint not installed, using go vet"
+          go vet ./...
+        fi
+
+  format:
+    desc: Format code
+    cmds:
+      - task: format-backend
+
+  format-backend:
+    desc: Format Go code
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - echo "Formatting Go code..."
+      - go fmt ./...
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - task: clean-backend
+      - task: clean-frontend
+
+  clean-backend:
+    desc: Clean backend artifacts
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - echo "Cleaning backend..."
+      - go clean
+      - rm -rf bin/
+
+  clean-frontend:
+    desc: Clean frontend artifacts
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - echo "Cleaning frontend..."
+      - rm -rf dist/
+      - rm -rf node_modules/
+
+  tools-install:
+    desc: Install development tools
+    cmds:
+      - echo "Installing development tools..."
+      - |
+        if ! command -v air > /dev/null; then
+          echo "Installing Air..."
+          go install github.com/cosmtrek/air@latest
+        fi
+      - |
+        if ! command -v golangci-lint > /dev/null; then
+          echo "Installing golangci-lint..."
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+        fi
+
+  start:
+    desc: Quick start
+    cmds:
+      - task: db-start
+      - task: db-wait
+      - echo "Database ready. Start backend with 'task dev-backend' and frontend with 'task dev-frontend'"
+
+  stop:
+    desc: Stop all services
+    cmds:
+      - pkill -f "air" || true
+      - pkill -f "go run" || true
+      - pkill -f "vite" || true
+      - task: db-stop
+
+  status:
+    desc: Show status
+    cmds:
+      - task: info
