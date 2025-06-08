@@ -1,0 +1,92 @@
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Register new user
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe"
+}
+
+### Login with email/password
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### Get current user (protected route)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+###
+@token = {{login.response.body.token}}
+
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+### Test invalid token
+GET {{baseUrl}}/auth/me
+Authorization: Bearer invalid_token_here
+
+### Test missing token
+GET {{baseUrl}}/auth/me
+
+### Test protected API route
+GET {{baseUrl}}/api/
+Authorization: Bearer {{token}}
+
+### Google OAuth Login (placeholder)
+POST {{baseUrl}}/auth/google
+Content-Type: {{contentType}}
+
+{
+  "token": "google_id_token_here"
+}
+
+### Test registration with invalid email
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "invalid-email",
+  "password": "password123",
+  "name": "Test User"
+}
+
+### Test registration with short password
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "test2@example.com",
+  "password": "123",
+  "name": "Test User"
+}
+
+### Test login with wrong credentials
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "wrongpassword"
+}
