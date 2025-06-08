@@ -49,11 +49,11 @@ tasks:
       - echo ""
       - echo "Backend (Go):"
       - cd "{{.BACKEND_DIR}}" && go version 2>/dev/null || echo "  Go not installed"
-      - test -f "{{.BACKEND_DIR}}/go.mod" && echo "  Go module initialized" || echo "  Go module not found"
+      - 'test -f "{{.BACKEND_DIR}}/go.mod" && echo "  Go module initialized" || echo "  Go module not found"'
       - echo ""
       - echo "Frontend (Node.js):"
       - cd "{{.FRONTEND_DIR}}" && node --version 2>/dev/null || echo "  Node.js not installed"
-      - test -f "{{.FRONTEND_DIR}}/package.json" && echo "  Package.json found" || echo "  Package.json not found"
+      - 'test -f "{{.FRONTEND_DIR}}/package.json" && echo "  Package.json found" || echo "  Package.json not found"'
     silent: true
 
   setup:
