@@ -1,5 +1,6 @@
 import type { Note } from '@/types/note'
 import { NoteCard } from './NoteCard'
+import { EmptyState } from './EmptyState'
 
 interface NoteGridProps {
   notes: Note[]
@@ -9,26 +10,24 @@ interface NoteGridProps {
 }
 
 export function NoteGrid({ notes, onNoteUpdate, onNoteDelete, onNoteClick }: NoteGridProps) {
-  // Separate pinned and unpinned notes
-  const pinnedNotes = notes.filter(note => note.is_pinned && !note.is_archived && !note.is_deleted)
-  const unpinnedNotes = notes.filter(note => !note.is_pinned && !note.is_archived && !note.is_deleted)
+  // Filter notes
+  const activeNotes = notes.filter(note => !note.is_archived && !note.is_deleted)
+  const pinnedNotes = activeNotes.filter(note => note.is_pinned)
+  const unpinnedNotes = activeNotes.filter(note => !note.is_pinned)
 
-  if (notes.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500 text-lg">No notes yet. Create your first note!</p>
-      </div>
-    )
+  if (activeNotes.length === 0) {
+    return <EmptyState />
   }
 
   return (
     <div className="space-y-8">
+      {/* Pinned Notes Section */}
       {pinnedNotes.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-gray-600 mb-4 uppercase tracking-wide">
+          <h2 className="text-xs font-medium text-gray-600 mb-4 uppercase tracking-wide pl-1">
             Pinned
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5 gap-4">
             {pinnedNotes.map((note) => (
               <NoteCard
                 key={note.id}
@@ -42,14 +41,15 @@ export function NoteGrid({ notes, onNoteUpdate, onNoteDelete, onNoteClick }: Not
         </section>
       )}
 
+      {/* Unpinned Notes Section */}
       {unpinnedNotes.length > 0 && (
         <section>
           {pinnedNotes.length > 0 && (
-            <h2 className="text-sm font-medium text-gray-600 mb-4 uppercase tracking-wide">
+            <h2 className="text-xs font-medium text-gray-600 mb-4 uppercase tracking-wide pl-1">
               Others
             </h2>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5 gap-4">
             {unpinnedNotes.map((note) => (
               <NoteCard
                 key={note.id}

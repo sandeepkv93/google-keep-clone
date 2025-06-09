@@ -159,6 +159,12 @@ tasks:
     desc: Start backend development server
     dir: "{{.BACKEND_DIR}}"
     deps: [db-start, db-wait]
+    env:
+      DATABASE_URL: "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode=disable"
+      REDIS_URL: "redis://localhost:6379"
+      JWT_SECRET: dev-secret-key-change-in-production
+      ENVIRONMENT: development
+      PORT: "{{.SERVER_PORT}}"
     cmds:
       - echo "Starting backend server..."
       - |
@@ -287,12 +293,37 @@ tasks:
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
         fi
 
-  start:
-    desc: Quick start
+  dev:
+    desc: Start full development environment (database + backend + frontend)
+    deps: [db-start, db-wait]
     cmds:
-      - task: db-start
-      - task: db-wait
-      - echo "Database ready. Start backend with 'task dev-backend' and frontend with 'task dev-frontend'"
+      - 'echo "🚀 Starting full development environment..."'
+      - 'echo "📊 Backend will be at: http://localhost:{{.SERVER_PORT}}"'
+      - 'echo "🌐 Frontend will be at: http://localhost:{{.FRONTEND_PORT}}"'
+      - 'echo "🏥 Health check: http://localhost:{{.SERVER_PORT}}/health"'
+      - 'echo ""'
+      - 'echo "⏹️  Stop with Ctrl+C or run: task stop"'
+      - 'echo ""'
+      - 'echo "⚠️  Note: This will run both servers. Use separate terminals for individual control:"'
+      - 'echo "   Backend only: task dev-backend"'
+      - 'echo "   Frontend only: task dev-frontend"'
+      - 'echo ""'
+      - 'echo "🔥 Starting backend server in background..."'
+      - |
+        cd {{.BACKEND_DIR}} && nohup env \
+          DATABASE_URL="postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode=disable" \
+          REDIS_URL="redis://localhost:6379" \
+          JWT_SECRET="dev-secret-key-change-in-production" \
+          ENVIRONMENT="development" \
+          PORT="{{.SERVER_PORT}}" \
+          air > ../backend.log 2>&1 &
+      - 'echo "⚛️  Starting frontend server..."'
+      - cd {{.FRONTEND_DIR}} && npm run dev
+
+  start:
+    desc: Quick start (alias for dev)
+    cmds:
+      - task: dev
 
   stop:
     desc: Stop all services

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="280" height="200" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Note Card with hover state -->
+  <rect width="280" height="200" rx="8" fill="#FFF2CC" stroke="#E0E0E0" stroke-width="1" filter="drop-shadow(0 4px 12px rgba(0,0,0,0.15))"/>
+  
+  <!-- Pin button (top right) -->
+  <circle cx="260" cy="20" r="12" fill="rgba(0,0,0,0.05)"/>
+  <circle cx="260" cy="20" r="6" fill="#F9AB00"/>
+  
+  <!-- Note content -->
+  <text x="16" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#202124">Shopping List</text>
+  <text x="16" y="50" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">🛒 Weekend grocery run:</text>
+  <text x="16" y="70" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Fresh vegetables</text>
+  <text x="16" y="90" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Organic milk</text>
+  <text x="16" y="110" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Whole grain bread</text>
+  <text x="16" y="130" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Free-range eggs</text>
+  
+  <!-- Bottom toolbar (visible on hover) -->
+  <rect x="0" y="160" width="280" height="40" fill="rgba(255,255,255,0.9)"/>
+  
+  <!-- Left toolbar icons -->
+  <g transform="translate(16, 170)">
+    <!-- Remind me -->
+    <circle cx="10" cy="10" r="10" fill="transparent"/>
+    <circle cx="10" cy="10" r="4" fill="#5F6368"/>
+    
+    <!-- Collaborator -->
+    <circle cx="30" cy="10" r="10" fill="transparent"/>
+    <circle cx="30" cy="10" r="4" fill="#5F6368"/>
+    
+    <!-- Color palette -->
+    <circle cx="50" cy="10" r="10" fill="transparent"/>
+    <rect x="46" y="6" width="8" height="8" fill="#5F6368"/>
+    
+    <!-- Image -->
+    <circle cx="70" cy="10" r="10" fill="transparent"/>
+    <rect x="66" y="6" width="8" height="8" fill="#5F6368"/>
+    
+    <!-- Archive -->
+    <circle cx="90" cy="10" r="10" fill="transparent"/>
+    <circle cx="90" cy="10" r="4" fill="#5F6368"/>
+  </g>
+  
+  <!-- Right toolbar - More menu -->
+  <g transform="translate(248, 170)">
+    <circle cx="10" cy="10" r="10" fill="transparent"/>
+    <circle cx="10" cy="6" r="1.5" fill="#5F6368"/>
+    <circle cx="10" cy="10" r="1.5" fill="#5F6368"/>
+    <circle cx="10" cy="14" r="1.5" fill="#5F6368"/>
+  </g>
+  
+  <!-- More menu dropdown -->
+  <rect x="180" y="120" width="120" height="80" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1" filter="drop-shadow(0 2px 8px rgba(0,0,0,0.1))"/>
+  <text x="190" y="140" font-family="Arial, sans-serif" font-size="14" fill="#202124">Delete note</text>
+  <text x="190" y="160" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Add label</text>
+  <text x="190" y="180" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Make a copy</text>
+</svg>

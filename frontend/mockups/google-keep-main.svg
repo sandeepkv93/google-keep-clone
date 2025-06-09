@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1440" height="900" fill="#FFFFFF"/>
+  
+  <!-- Header -->
+  <rect width="1440" height="64" fill="#FFFFFF"/>
+  <rect x="0" y="63" width="1440" height="1" fill="#E0E0E0"/>
+  
+  <!-- Menu Icon -->
+  <rect x="20" y="20" width="24" height="2" fill="#5F6368"/>
+  <rect x="20" y="29" width="24" height="2" fill="#5F6368"/>
+  <rect x="20" y="38" width="24" height="2" fill="#5F6368"/>
+  
+  <!-- Google Keep Logo -->
+  <circle cx="68" cy="32" r="12" fill="#FBBC04"/>
+  <rect x="74" y="26" width="4" height="12" fill="#EA4335"/>
+  <rect x="80" y="29" width="4" height="9" fill="#34A853"/>
+  <rect x="86" y="23" width="4" height="15" fill="#4285F4"/>
+  
+  <!-- Keep Text -->
+  <text x="104" y="38" font-family="Arial, sans-serif" font-size="22" fill="#5F6368">Keep</text>
+  
+  <!-- Search Bar -->
+  <rect x="280" y="16" width="600" height="32" rx="16" fill="#F1F3F4"/>
+  <circle cx="300" cy="32" r="8" fill="#9AA0A6"/>
+  <text x="320" y="36" font-family="Arial, sans-serif" font-size="14" fill="#9AA0A6">Search</text>
+  
+  <!-- Right Icons -->
+  <rect x="1320" y="20" width="24" height="24" rx="4" fill="#F1F3F4"/>
+  <rect x="1360" y="20" width="24" height="24" rx="4" fill="#F1F3F4"/>
+  <circle cx="1412" cy="32" r="16" fill="#4285F4"/>
+  <text x="1408" y="36" font-family="Arial, sans-serif" font-size="12" fill="white">A</text>
+  
+  <!-- Sidebar -->
+  <rect x="0" y="64" width="280" height="836" fill="#FFFFFF"/>
+  <rect x="279" y="64" width="1" height="836" fill="#E0E0E0"/>
+  
+  <!-- Sidebar Items -->
+  <g>
+    <!-- Notes (Active) -->
+    <rect x="12" y="84" width="256" height="48" rx="24" fill="#FEEFC3"/>
+    <circle cx="36" cy="108" r="10" fill="#F9AB00"/>
+    <text x="60" y="112" font-family="Arial, sans-serif" font-size="14" fill="#202124">Notes</text>
+    
+    <!-- Reminders -->
+    <rect x="12" y="140" width="256" height="48" rx="24" fill="transparent"/>
+    <circle cx="36" cy="164" r="10" fill="#5F6368"/>
+    <text x="60" y="168" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Reminders</text>
+    
+    <!-- Edit Labels -->
+    <rect x="12" y="196" width="256" height="48" rx="24" fill="transparent"/>
+    <circle cx="36" cy="220" r="10" fill="#5F6368"/>
+    <text x="60" y="224" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Edit labels</text>
+    
+    <!-- Archive -->
+    <rect x="12" y="252" width="256" height="48" rx="24" fill="transparent"/>
+    <circle cx="36" cy="276" r="10" fill="#5F6368"/>
+    <text x="60" y="280" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Archive</text>
+    
+    <!-- Trash -->
+    <rect x="12" y="308" width="256" height="48" rx="24" fill="transparent"/>
+    <circle cx="36" cy="332" r="10" fill="#5F6368"/>
+    <text x="60" y="336" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Trash</text>
+  </g>
+  
+  <!-- Main Content Area -->
+  <rect x="280" y="64" width="1160" height="836" fill="#FFFFFF"/>
+  
+  <!-- Take a note input -->
+  <rect x="320" y="100" width="600" height="48" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="340" y="128" font-family="Arial, sans-serif" font-size="16" fill="#9AA0A6">Take a note...</text>
+  <rect x="880" y="115" width="18" height="18" fill="#9AA0A6"/>
+  
+  <!-- Notes Grid -->
+  <!-- Pinned Section -->
+  <text x="320" y="180" font-family="Arial, sans-serif" font-size="11" fill="#5F6368" font-weight="500">PINNED</text>
+  
+  <!-- Pinned Note 1 -->
+  <rect x="320" y="200" width="240" height="160" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="335" y="220" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#202124">Meeting Notes</text>
+  <text x="335" y="240" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Discuss project timeline</text>
+  <text x="335" y="258" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Review budget constraints</text>
+  <text x="335" y="276" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Assign team responsibilities</text>
+  <!-- Pin icon -->
+  <circle cx="540" cy="220" r="8" fill="#F9AB00"/>
+  
+  <!-- Pinned Note 2 -->
+  <rect x="580" y="200" width="240" height="120" rx="8" fill="#FFF2CC" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="595" y="240" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Remember to buy groceries:</text>
+  <text x="595" y="258" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Milk, Bread, Eggs, Bananas</text>
+  <!-- Pin icon -->
+  <circle cx="800" cy="220" r="8" fill="#F9AB00"/>
+  
+  <!-- Others Section -->
+  <text x="320" y="400" font-family="Arial, sans-serif" font-size="11" fill="#5F6368" font-weight="500">OTHERS</text>
+  
+  <!-- Regular Note 1 -->
+  <rect x="320" y="420" width="240" height="180" rx="8" fill="#F8BBD0" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="335" y="440" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#202124">Book List</text>
+  <text x="335" y="460" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">📚 Books to read this year:</text>
+  <text x="335" y="478" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• The Design of Everyday Things</text>
+  <text x="335" y="496" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Atomic Habits</text>
+  <text x="335" y="514" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Clean Code</text>
+  
+  <!-- Regular Note 2 -->
+  <rect x="580" y="420" width="240" height="140" rx="8" fill="#C8E6C9" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="595" y="440" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#202124">Weekend Plans</text>
+  <text x="595" y="460" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Saturday:</text>
+  <text x="595" y="478" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">- Morning jog in the park</text>
+  <text x="595" y="496" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">- Coffee with Sarah at 2pm</text>
+  <text x="595" y="514" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">- Movie night at home</text>
+  
+  <!-- Regular Note 3 -->
+  <rect x="840" y="420" width="240" height="100" rx="8" fill="#FFECB3" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="855" y="450" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">Call dentist to schedule cleaning</text>
+  <text x="855" y="468" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">appointment for next month</text>
+  
+  <!-- Regular Note 4 -->
+  <rect x="1100" y="420" width="240" height="160" rx="8" fill="#E1BEE7" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="1115" y="440" font-family="Arial, sans-serif" font-size="16" font-weight="500" fill="#202124">Recipe Ideas</text>
+  <text x="1115" y="460" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">🍝 Pasta dishes to try:</text>
+  <text x="1115" y="478" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Carbonara with peas</text>
+  <text x="1115" y="496" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Lemon garlic linguine</text>
+  <text x="1115" y="514" font-family="Arial, sans-serif" font-size="14" fill="#5F6368">• Mushroom risotto</text>
+</svg>
